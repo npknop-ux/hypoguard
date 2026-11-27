@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b6e99"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="HypoGuard">
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="icon-192.png">
+<title>HypoGuard Ward – เฝ้าระวัง Hypoglycemia ผู้ป่วยใน</title>
+<style>
+:root{--bg:#f6f7f9;--cd:#fff;--tx:#1b2330;--mu:#5d6878;--bd:#dde2ea;--ac:#0b6e99;--lo:#e3f4ea;--mo:#fff1d6;--hi:#fde4e4;--hit:#c42b2b;--mot:#b36b00;--lot:#1a7f4b}
+@media(prefers-color-scheme:dark){:root{--bg:#10151c;--cd:#19202a;--tx:#e8edf3;--mu:#98a3b3;--bd:#2c3644;--ac:#4fb3dd;--lo:#163023;--mo:#3a2d12;--hi:#3d1b1b;--hit:#ff7b7b;--mot:#f0b24a;--lot:#52c488}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font-family:"Sarabun","Noto Sans Thai",system-ui,sans-serif;line-height:1.5}
+.w{max-width:1000px;margin:0 auto;padding:14px}h1{font-size:1.35rem;margin:.1em 0}
+.cd{background:var(--cd);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
+button,input,select{font:inherit;color:var(--tx);background:var(--cd);border:1px solid var(--bd);border-radius:8px;padding:7px 11px}
+button{cursor:pointer}button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+.r{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.mu{color:var(--mu);font-size:.85rem}
+.tabs button.on{background:var(--ac);color:#fff}
+table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{padding:7px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}
+.sc{overflow-x:auto}tr.hi td:first-child{border-left:5px solid var(--hit)}tr.mo td:first-child{border-left:5px solid var(--mot)}tr.lo td:first-child{border-left:5px solid var(--lot)}
+tr.row{cursor:pointer}.b{padding:2px 9px;border-radius:99px;font-weight:600;font-size:.8rem}.b.hi{background:var(--hi);color:var(--hit)}.b.mo{background:var(--mo);color:var(--mot)}.b.lo{background:var(--lo);color:var(--lot)}
+.sum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.sum div{border-radius:10px;padding:8px;text-align:center}.sum b{font-size:1.5rem;display:block}
+.det td{background:var(--bg)}.hide{display:none}ul{margin:4px 0;padding-left:18px}
+#t-api .r input,#ed .r input:not([type=checkbox]){flex:1 1 150px}
+@media(max-width:640px){
+.w{padding:10px}input,select,button{font-size:16px;min-height:42px}
+.sum b{font-size:1.25rem}
+thead{display:none}table,tbody{display:block}
+tr.row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px 10px;padding:10px;margin-bottom:8px;border:1px solid var(--bd);border-radius:10px;background:var(--cd)}
+tr.row.hi{border-left:6px solid var(--hit)}tr.row.mo{border-left:6px solid var(--mot)}tr.row.lo{border-left:6px solid var(--lot)}
+tr.row td{display:block;border:0;padding:2px 0}
+tr.row.hi td:first-child,tr.row.mo td:first-child,tr.row.lo td:first-child{border-left:0}
+tr.row td::before{content:attr(data-l);display:block;font-size:.7rem;color:var(--mu)}
+tr.row td[data-l="ปัจจัยเสี่ยง"],tr.row td:last-child{grid-column:1/-1}
+tr.det{display:block;margin:-4px 0 8px}tr.det td{display:block;border:1px solid var(--bd);border-radius:10px}
+.cd.sc{padding:0;border:0;background:none}
+}
+@media print{.np{display:none}body{background:#fff}}
+</style></head><body><div class="w">
+<h1>🛏️ HypoGuard Ward</h1>
+<div class="mu">รายชื่อผู้ป่วยเสี่ยง hypoglycemia ทั้งหอ จัดลำดับความเสี่ยง ประเมินรายบุคคล + ภาพรวมทั้งหอในแอปเดียว · ใช้ได้ทุกเวร (เช้า / บ่าย / ดึก)</div>
+
+<div class="cd np">
+<div class="r tabs" style="margin-bottom:8px">
+<button data-t="csv" class="on">นำเข้า CSV</button><button data-t="api">เชื่อมต่อ API</button><button data-t="demo">ข้อมูลตัวอย่าง</button></div>
+<div id="t-csv"><div class="r"><input type="file" id="file" accept=".csv,.txt"><button id="tpl">โหลดไฟล์ template</button></div>
+<div class="mu" style="margin-top:6px">ประมวลผลในเครื่องนี้เท่านั้น ไม่ส่งข้อมูลออกไปไหน</div></div>
+<div id="t-api" class="hide"><div class="r"><input id="url" size="38" placeholder="http://192.168.x.x:8787/api/patients"><input id="ward" placeholder="รหัสหอ (ถ้ามี)" size="12"><select id="iv"><option value="0">ดึงด้วยมือ</option><option value="300">ทุก 5 นาที</option><option value="900">ทุก 15 นาที</option></select><button class="p" id="fetch">ดึงข้อมูล</button></div>
+<div class="mu" style="margin-top:6px">ต้องเปิดไฟล์นี้จากเซิร์ฟเวอร์ภายใน รพ. (หรือเปิดจากเครื่อง) เพื่อเรียก API ภายในได้ – ดู bridge ใน hoxp-bridge.js · API ต้องคืน JSON array ฟิลด์เดียวกับ template</div></div>
+<div id="msg" class="mu" style="margin-top:6px"></div></div>
+
+<div class="r np" style="margin-bottom:12px"><button class="p" onclick="edit(null)">＋ ประเมิน / เพิ่มผู้ป่วย</button><button onclick="exp()">ส่งออก CSV</button><span class="mu">กดปุ่ม "ประเมิน" ที่แถวผู้ป่วยเพื่อเติมข้อมูลที่ระบบดึงไม่ได้ (NPO, ไต, ตับ ฯลฯ)</span></div>
+<div id="ed" class="cd hide np"><b>ประเมินรายบุคคล</b>
+<div class="r" style="margin:8px 0"><input id="e_bed" placeholder="เตียง" size="6"><input id="e_hn" placeholder="HN" size="10"><input id="e_name" placeholder="ชื่อ" size="16"><input id="e_age" type="number" placeholder="อายุ" style="width:80px"><input id="e_ward" placeholder="จุดบริการ/หอ" size="12"><input id="e_dtx_admit" type="number" placeholder="DTX แรกรับ" style="width:120px"><input id="e_dtx" type="number" placeholder="DTX ล่าสุด (admit)" style="width:140px"><input id="e_dtx_time" placeholder="เวลาวัด" size="14"></div>
+<div id="e_flags" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px"></div>
+<div id="pv" style="margin:10px 0"></div>
+<div class="r"><button class="p" onclick="save()">บันทึกเข้ารายชื่อหอ</button><button onclick="closeEd()">ปิด</button><button id="e_del" onclick="delx()">ลบรายนี้</button></div>
+<div class="mu" style="margin-top:6px">การแก้ไขอยู่ในหน่วยความจำของหน้านี้เท่านั้น (ปิดหน้าแล้วหาย) – ใช้ "ส่งออก CSV" เพื่อเก็บไว้</div></div>
+<div id="res" class="hide">
+<div class="sum" id="sum"></div>
+<div id="hd" style="font-weight:700;font-size:1.05rem;margin-top:10px"></div>
+<div class="r np" style="margin:10px 0"><select id="sh"><option value="m">เวรเช้า 08–16</option><option value="a">เวรบ่าย 16–24</option><option value="n">เวรดึก 00–08</option></select><label><input type="checkbox" id="mask" checked> ซ่อนชื่อ (แสดง HN)</label>
+<select id="pt"><option value="">ทุกจุดบริการ</option></select><select id="flt"><option value="">ทุกระดับ</option><option value="hi">เฉพาะสูง</option><option value="mo">ปานกลางขึ้นไป</option></select>
+<button onclick="window.print()">พิมพ์ใบส่งเวร</button><span class="mu" id="ts"></span></div>
+<div class="cd sc"><table><thead><tr><th>เตียง</th><th>HN</th><th class="nm">ชื่อ</th><th>อายุ</th><th>DTX แรกรับ</th><th>DTX ล่าสุด (admit)</th><th>ระดับ</th><th>ปัจจัยเสี่ยง</th><th class="np"></th></tr></thead><tbody id="tb"></tbody></table></div>
+</div>
+<div class="cd mu">⚠️ เครื่องมือช่วยตัดสินใจเบื้องต้น ไม่ใช่คำสั่งการรักษา ต้องปรับเกณฑ์ให้ตรง protocol ของ รพ. และให้แพทย์/เภสัชกรยืนยันก่อนใช้จริง · ข้อมูลผู้ป่วยเป็นข้อมูลส่วนบุคคล ใช้ตามนโยบาย PDPA ของ รพ.</div>
+</div>
+<script>
+const FL={prior:["เคย hypo ใน รพ.",3],npo:["NPO/กินน้อย",3],feed:["TPN/tube feed ลด/หยุด",3],insulin:["อินซูลิน",1],su:["Sulfonylurea",2],rise:["เพิ่มอินซูลินล่าสุด",1],steroid:["ลด steroid",2],renal:["ไตเสื่อม",2],liver:["ตับ",2],sepsis:["ติดเชื้อรุนแรง",2],elderly:["อายุ≥65/สับสน",2],new_insulin:["เริ่มอินซูลินใหม่",1]};
+const KEYS=Object.keys(FL),HEAD=["bed","hn","name","age","dtx","dtx_time",...KEYS,"ward","dtx_admit","dtx_admit_time"];
+const T=v=>/^(1|y|yes|true|t|ใช่|มี)$/i.test(String(v??"").trim());
+let DATA=[],timer=null;
+function calc(p){const f={};KEYS.forEach(k=>f[k]=T(p[k]));const age=+p.age;if(age>=65)f.elderly=true;
+ const bg=parseFloat(p.dtx),ins=f.insulin||f.su;let s=0;KEYS.forEach(k=>{if(f[k])s+=FL[k][1]});
+ let g=0;if(ins&&bg<100)g=3;else if(ins&&bg<140)g=1;s+=g;const ba=parseFloat(p.dtx_admit);if(ba<70)s+=1;
+ let lv=s>=6?"hi":s>=3?"mo":"lo";if(ins&&bg<100&&lv=="lo")lv="mo";if(bg<70)lv="hi";
+ const fac=KEYS.filter(k=>f[k]).map(k=>FL[k][0]);if(g>=1)fac.push("DTX "+(g==3?"<100":"100-139")+" ขณะใช้ยา");
+ if(ba<70)fac.push("DTX แรกรับ <70");const rec=[];if(bg<70)rec.push("🚨 DTX <70: รักษาทันที (15–20 g carb / IV dextrose ตามคำสั่ง) วัดซ้ำ 15 นาที แจ้งแพทย์");
+ if(lv!="lo"){if(ins&&bg<100)rec.push("ขนมว่างก่อนนอน ~15–30 g carb + โปรตีน แล้ววัดซ้ำ 30–60 นาที");
+  if(f.npo||f.feed)rec.push("เสนอแพทย์: dextrose IV / ปรับอินซูลินและ SU ตามอาหารที่ได้จริง");
+  if(f.su)rec.push("เสนอแพทย์/เภสัชกร: ทบทวนหยุดหรือลด sulfonylurea");
+  if(f.insulin)rec.push("เสนอแพทย์: ทบทวน basal/NPH ก่อนนอน (แนวทางทั่วไปลด 10–20%)");
+  if(f.steroid)rec.push("ลด steroid: ความต้องการอินซูลินลดลง ควรทบทวนแผน");
+  const SV=document.getElementById("sh").value;rec.push(MON[SV](lv=="hi"));XTRA[SV].forEach(x=>rec.push(x));
+  rec.push("เตรียมชุดแก้ไข hypo ใกล้เตียง และแจ้งเวรดึก");}else rec.push("ตรวจน้ำตาลตามตารางปกติของเวร");
+ return{...p,s,lv,fac,rec}}
+const SHN={m:"เวรเช้า (08.00–16.00)",a:"เวรบ่าย (16.00–24.00)",n:"เวรดึก (00.00–08.00)"},NXT={m:"เวรบ่าย",a:"เวรดึก",n:"เวรเช้า"};
+const MON={m:(h)=>"วัดน้ำตาลก่อนอาหารเช้า/กลางวัน และก่อนฉีดอินซูลินทุกครั้ง"+(h?" · ตรวจซ้ำ 2 ชม.หลังมื้อถ้ากินน้อย":""),a:(h)=>"วัดน้ำตาลก่อนอาหารเย็น และก่อนนอน (ให้ขนมว่างถ้าต่ำ)"+(h?" · วัดซ้ำ 2–3 ชม.หลังฉีด":""),n:(h)=>"วัดน้ำตาล: ก่อนนอน, 02.00–03.00"+(h?", 00.00, 05.00 (ทุก 2–3 ชม.)":"")+", ก่อนอาหารเช้า"};
+const XTRA={m:["ตรวจว่ากินอาหารได้จริงก่อนฉีด rapid-acting (กินน้อย → ปรึกษาแพทย์/ฉีดหลังกินตามคำสั่ง)","ผู้ป่วยไปตรวจ/หัตถการงดอาหาร: ปรึกษาแพทย์เรื่องพัก/ลดอินซูลินและ SU ก่อนไป และพกชุดแก้ hypo ไปด้วย"],a:["ตรวจ basal/NPH ก่อนนอนเทียบกับอาหารเย็นที่กินจริง","ส่งต่อรายชื่อผู้ป่วยเสี่ยงสูงให้เวรดึกด้วยวาจา"],n:[]};
+let MAN={},EXTRA=[],EK=null;
+const $=id=>document.getElementById(id),view=()=>DATA.map((p,i)=>({...p,...(MAN[p.hn]||{}),_k:"s"+i})).concat(EXTRA.map((p,j)=>({...p,_k:"x"+j})));
+$("e_flags").innerHTML=KEYS.map(k=>`<label><input type="checkbox" id="e_${k}"> ${FL[k][0]}</label>`).join("");
+function rd(){const o={};["bed","hn","name","age","dtx","dtx_time","ward","dtx_admit"].forEach(f=>o[f]=$("e_"+f).value.trim());KEYS.forEach(f=>o[f]=$("e_"+f).checked?1:0);return o}
+function prev(){const o=calc(rd()),h=$("e_dtx").value===""?'<div class="mu">กรอกค่า DTX เพื่อประเมินครบถ้วน</div>':"";
+ $("pv").innerHTML=h+`<span class="b ${o.lv}">ความเสี่ยง${LN[o.lv]} (คะแนน ${o.s})</span><ul>${o.rec.map(r=>`<li>${r}</li>`).join("")}</ul>`}
+function edit(k){EK=k;const p=k?view().find(o=>o._k==k):{};["bed","hn","name","age","dtx","ward","dtx_admit"].forEach(f=>$("e_"+f).value=p[f]??"");
+ $("e_dtx_time").value=p.dtx_time||new Date().toLocaleString("th-TH",{dateStyle:"short",timeStyle:"short"});
+ KEYS.forEach(f=>$("e_"+f).checked=T(p[f]));$("e_del").style.display=k&&k[0]=="x"?"":"none";
+ $("ed").classList.remove("hide");prev();$("ed").scrollIntoView({behavior:"smooth"})}
+const closeEd=()=>$("ed").classList.add("hide");
+function save(){const o=rd();if(!o.hn&&!o.bed)return alert("กรอกเตียงหรือ HN");
+ if(EK&&EK[0]=="s"){const hn=view().find(x=>x._k==EK).hn;delete o.hn;MAN[hn]=o}else if(EK)EXTRA[+EK.slice(1)]=o;else EXTRA.push(o);
+ closeEd();render()}
+function delx(){if(EK&&EK[0]=="x"){EXTRA.splice(+EK.slice(1),1);closeEd();render()}}
+function exp(){const q=v=>'"'+String(v??"").replace(/"/g,'""')+'"';const r=view().map(o=>HEAD.map(k=>KEYS.includes(k)?(T(o[k])?1:0):q(o[k])).join(","));
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+HEAD.join(",")+"\n"+r.join("\n")],{type:"text/csv"}));a.download="hypoguard_"+new Date().toISOString().slice(0,10)+".csv";a.click()}
+$("ed").addEventListener("input",prev);$("ed").addEventListener("change",prev);
+const LN={hi:"สูง",mo:"ปานกลาง",lo:"ต่ำ"};
+function render(){const SV0=document.getElementById("sh").value;document.getElementById("hd").textContent="ใบส่งเวร: "+SHN[SV0]+" → ส่งต่อ"+NXT[SV0];
+ const out=view().map(calc).sort((a,b)=>b.s-a.s||(+a.dtx)-(+b.dtx));
+ const c={hi:0,mo:0,lo:0};out.forEach(o=>c[o.lv]++);
+ document.getElementById("sum").innerHTML=`<div style="background:var(--cd);border:1px solid var(--bd)"><b>${out.length}</b>ทั้งหมด</div><div style="background:var(--hi);color:var(--hit)"><b>${c.hi}</b>สูง</div><div style="background:var(--mo);color:var(--mot)"><b>${c.mo}</b>ปานกลาง</div><div style="background:var(--lo);color:var(--lot)"><b>${c.lo}</b>ต่ำ</div>`;
+ const mask=document.getElementById("mask").checked,flt=document.getElementById("flt").value;
+ document.querySelectorAll(".nm").forEach(e=>e.style.display=mask?"none":"");
+ const esc=s=>String(s??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+ const pt=document.getElementById("pt").value,pts=[...new Set(out.map(o=>o.ward).filter(Boolean))].sort();
+ document.getElementById("pt").innerHTML='<option value="">ทุกจุดบริการ</option>'+pts.map(w=>`<option${w==pt?" selected":""}>${esc(w)}</option>`).join("");
+ let h="";out.filter(o=>(!pt||o.ward==pt)&&(!flt||(flt=="hi"?o.lv=="hi":o.lv!="lo"))).forEach((o,i)=>{
+  h+=`<tr class="row ${o.lv}" onclick="document.getElementById('d${i}').classList.toggle('hide')"><td data-l="เตียง">${esc(o.bed)}<div class="mu">${esc(o.ward)}</div></td><td data-l="HN">${esc(o.hn)}</td><td class="nm" data-l="ชื่อ" style="${mask?"display:none":""}">${esc(o.name)}</td><td data-l="อายุ">${esc(o.age)}</td><td data-l="DTX แรกรับ">${esc(o.dtx_admit)||"-"}${o.dtx_admit_time?`<div class="mu">${esc(o.dtx_admit_time)}</div>`:""}</td><td data-l="DTX ล่าสุด">${esc(o.dtx)}${o.dtx_time?`<div class="mu">${esc(o.dtx_time)}</div>`:""}</td><td data-l="ระดับ"><span class="b ${o.lv}">${LN[o.lv]} (${o.s})</span></td><td data-l="ปัจจัยเสี่ยง">${esc(o.fac.join(", "))||"-"}</td><td class="np"><button onclick="event.stopPropagation();edit('${o._k}')">ประเมิน</button></td></tr>
+  <tr id="d${i}" class="det hide"><td colspan="9"><ul>${o.rec.map(r=>`<li>${esc(r)}</li>`).join("")}</ul></td></tr>`});
+ document.getElementById("tb").innerHTML=h;document.getElementById("res").classList.remove("hide");
+ document.getElementById("ts").textContent="อัปเดต "+new Date().toLocaleTimeString("th-TH")}
+function csv(t){const rows=[];let r=[],c="",q=false;for(let i=0;i<t.length;i++){const ch=t[i];if(q){if(ch=='"'&&t[i+1]=='"'){c+='"';i++}else if(ch=='"')q=false;else c+=ch}else if(ch=='"')q=true;else if(ch==","){r.push(c);c=""}else if(ch=="\n"||ch=="\r"){if(ch=="\r"&&t[i+1]=="\n")i++;r.push(c);c="";if(r.some(x=>x.trim()))rows.push(r);r=[]}else c+=ch}
+ if(c||r.length){r.push(c);rows.push(r)}const h=rows.shift().map(x=>x.trim().toLowerCase().replace(/^\ufeff/,""));return rows.map(x=>Object.fromEntries(h.map((k,i)=>[k,x[i]])))}
+const msg=(m,e)=>{const el=document.getElementById("msg");el.textContent=m;el.style.color=e?"var(--hit)":""};
+document.getElementById("file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{DATA=csv(r.result);if(!DATA.length||!("hn"in DATA[0])||!("dtx"in DATA[0]))throw 0;msg("นำเข้า "+DATA.length+" ราย");render()}catch{msg("ไฟล์ไม่ตรงรูปแบบ: ต้องมีหัวคอลัมน์ hn, dtx ตาม template",1)}};r.readAsText(f,"utf-8")};
+document.getElementById("tpl").onclick=()=>{const s=HEAD.join(",")+"\n12,100001,สมชาย ใจดี,72,92,2026-11-26 20:30,"+KEYS.map(k=>["insulin","renal","npo"].includes(k)?1:0).join(",")+",อายุรกรรมชาย,110,2026-11-26 14:00\n";const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+s],{type:"text/csv"}));a.download="hypoguard_template.csv";a.click()};
+async function pull(){const u=document.getElementById("url").value.trim();if(!u)return msg("กรอก URL ของ API",1);
+ try{const w=document.getElementById("ward").value.trim();const r=await fetch(u+(w?(u.includes("?")?"&":"?")+"ward="+encodeURIComponent(w):""));if(!r.ok)throw new Error(r.status);DATA=await r.json();if(!Array.isArray(DATA))throw new Error("ต้องเป็น JSON array");try{localStorage.setItem("hg_url",u);localStorage.setItem("hg_ward",w)}catch{}msg("ดึงข้อมูล "+DATA.length+" ราย");render()}catch(e){msg("เชื่อมต่อไม่ได้: "+e.message+" (ตรวจ URL / CORS / เครือข่าย)",1)}}
+document.getElementById("fetch").onclick=()=>{pull();clearInterval(timer);const s=+document.getElementById("iv").value;if(s)timer=setInterval(pull,s*1000)};
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("on",x==b));["csv","api"].forEach(t=>document.getElementById("t-"+t).classList.toggle("hide",b.dataset.t!=t));
+ if(b.dataset.t=="demo"){DATA=[["12","100001","สมชาย ใจดี",72,88,1,1,0,1,0,0,0,0,0,0,1],["05","100002","สมหญิง รักดี",58,64,1,0,0,0,0,0,0,0,0,0,0],["08","100003","วิชัย มั่นคง",81,131,0,0,0,1,0,0,1,0,0,0,0],["03","100004","มาลี สุขใจ",49,172,0,0,0,1,0,0,0,0,0,0,0],["15","100005","ประยุทธ์ แก้วดี",67,96,0,0,0,1,1,0,1,1,0,0,0]].map(a=>{const o={bed:a[0],hn:a[1],name:a[2],age:a[3],dtx:a[4],dtx_time:"20:30"};const v=a.slice(5);["prior","npo","feed","insulin","su","rise","steroid","renal","liver","sepsis"].forEach((k,i)=>o[k]=v[i]);return o});msg("ข้อมูลตัวอย่าง (ไม่ใช่ผู้ป่วยจริง)");render()}});
+document.getElementById("sh").value=(h=>h>=8&&h<16?"m":h>=16?"a":"n")(new Date().getHours());
+document.getElementById("mask").onchange=document.getElementById("flt").onchange=document.getElementById("pt").onchange=document.getElementById("sh").onchange=()=>view().length&&render();
+try{document.getElementById("url").value=localStorage.getItem("hg_url")||"";document.getElementById("ward").value=localStorage.getItem("hg_ward")||""}catch{}
+</script>
+<script>if("serviceWorker"in navigator&&location.protocol.indexOf("http")==0)navigator.serviceWorker.register("sw.js").catch(function(){})</script></body></html>
